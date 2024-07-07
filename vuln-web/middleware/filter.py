@@ -1,5 +1,3 @@
-
-
 import re
 from urllib.parse import unquote_plus
 from defination import BLOCKED_PATTERN
@@ -15,10 +13,11 @@ class FilterMiddleware:
     
     def contains_blocked_pattern(self, body:bytes, content_type):
         # Decode body based on content type
-        if content_type == 'application/x-www-form-urlencoded':
-            body = unquote_plus(body.decode('utf-8', errors='ignore'))
+        
+        if content_type == b'application/x-www-form-urlencoded':
+            body = unquote_plus(body.decode('utf-8', errors='replace'))
         else:
-            body :str = body.decode('unicode-escape',errors="ingnore")
+            body :str = body.decode('unicode-escape',errors="replace")
 
         for pattern in BLOCKED_PATTERN:
             if re.search(pattern, body, re.IGNORECASE | re.MULTILINE):
@@ -28,6 +27,7 @@ class FilterMiddleware:
     async def __call__(self, scope, receive, send):
         if scope['type'] == 'http':
             
+            
             query_params = scope.get('query_string', b'')
             
             if query_params:
@@ -36,13 +36,18 @@ class FilterMiddleware:
                     if len(tokens) != 2:
                         continue
                     value = tokens[1]
-                    if self.contains_blocked_pattern(value,'application/x-www-form-urlencoded'):
+                    if self.contains_blocked_pattern(value,b'application/x-www-form-urlencoded'):
                         return await self.error_response(send)
+                    # Check path parameters (assuming path is decoded UTF-8)
+            
+            path = scope['path']
+            if path and self.contains_blocked_pattern(path.encode(), b'application/x-www-form-urlencoded'):
+                return await self.error_response(send)
             
             
             
-            body = await self.get_request_body(receive)
-            content_type = dict(scope['headers']).get(b'content-type', b'').decode('utf-8')
+            body : bytes= await self.get_request_body(receive)
+            content_type = dict(scope['headers']).get(b'content-type', b'application/x-www-form-urlencoded')
 
             if len(body) <= 2500 and self.contains_blocked_pattern(body, content_type):
                 return await self.error_response(send)

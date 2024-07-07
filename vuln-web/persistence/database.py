@@ -43,10 +43,9 @@ async def initialize():
         
 
 async def db_session() ->Session:
-    global init
-    if not init:
-        await initialize()
-        init = True
+    #if not init:
+    #    await initialize()
+    #    init = True
     return sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
 
 _LOGGER = logging.getLogger(__name__)

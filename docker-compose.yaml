@@ -8,13 +8,19 @@ services:
     depends_on:
       - db
     env_file:
-      - .env
+      - app.env
     environment:
       - PYTHONPATH=/app
-  
+
   db:
     image: postgres:13
-    ports:
-      - "5432:5432"
+    # Remove the ports section to prevent exposing the database to the host machine
     env_file:
-      - .env
+      - db.env
+    volumes:
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+
+# Define a custom network (optional but recommended for clarity)
+networks:
+  default:
+    driver: bridge

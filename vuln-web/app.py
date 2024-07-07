@@ -36,7 +36,16 @@ async def insert_feedback():
         msg = "success"
     return {"msg": msg}
 
-
-
+@app.route('/feedback/<string:feedback_id>', methods=['GET'])
+async def get_feedback_by_id(feedback_id):
+    from persistence.dal import DAL
+    result,msg=await DAL.get_feedback_by_id(feedback_id)
+    if result:
+        return {"id":feedback_id,"message":result[0]}
+    if msg is None and result is None:
+        msg = "Feedback Not found"
+    return {"msg": msg}
+    
+    
 if __name__ == "__main__":   
     app.run()
