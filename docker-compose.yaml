@@ -1,0 +1,20 @@
+version: '3.8'
+
+services:
+  vuln-web:
+    build: ./vuln-web
+    ports:
+      - "80:80"
+    depends_on:
+      - db
+    env_file:
+      - .env
+    environment:
+      - PYTHONPATH=/app
+  
+  db:
+    image: postgres:13
+    ports:
+      - "5432:5432"
+    env_file:
+      - .env
